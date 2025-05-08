@@ -509,20 +509,24 @@ function showVictory() {
 
 
 
-  <script>
+<script>
 let gameCode = "";
+const socket = io();
 
+// Generate game code
 function generateCode() {
   fetch('/api/generate')
     .then(res => res.json())
     .then(data => {
       gameCode = data.code;
+      socket.emit('joinRoom', gameCode);
       document.getElementById("generatedCode").innerHTML = "Generated Code: <b>" + gameCode + "</b>";
       document.getElementById("statusMessage").innerText = "Share this code with Player 2.";
       document.getElementById("statusMessage").style.color = "green";
     });
 }
 
+// Join existing game
 function joinGame() {
   const entered = document.getElementById("enteredCode").value.trim();
   fetch('/api/join', {
@@ -533,6 +537,8 @@ function joinGame() {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
+        gameCode = entered;
+        socket.emit('joinRoom', gameCode);
         document.getElementById("statusMessage").innerText = "✅ Code matched! Game can start!";
         document.getElementById("statusMessage").style.color = "green";
       } else {
@@ -541,6 +547,38 @@ function joinGame() {
       }
     });
 }
+
+// Build the board
+const tableBody = document.createElement("tbody");
+document.getElementById("bingoTable")?.appendChild(tableBody);
+
+const numbers = Array.from({ length: 25 }, (_, i) => i + 1)
+  .sort(() => 0.5 - Math.random())
+  .slice(0, 25);
+
+for (let row = 0; row < 5; row++) {
+  const tr = document.createElement("tr");
+  for (let col = 0; col < 5; col++) {
+    const td = document.createElement("td");
+    td.textContent = numbers[row * 5 + col];
+    td.dataset.row = row;
+    td.dataset.col = col;
+    td.addEventListener("click", () => handleClick(row, col, td));
+    tr.appendChild(td);
+  }
+  tableBody.appendChild(tr);
+}
+
+function handleClick(row, col, td) {
+  td.classList.add("red");
+  socket.emit('cellClicked', { room: gameCode, row, col });
+}
+
+// Listen to cell updates from other player
+socket.on('cellClicked', ({ row, col }) => {
+  const td = tableBody.rows[row].cells[col];
+  td.classList.add("red");
+});
 </script>
 
     
