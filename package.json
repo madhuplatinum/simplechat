@@ -1,7 +1,7 @@
 {
   "name": "simplemessenger",
   "version": "1.0.0",
-  "description": "A simple online chat app",
+  "description": "Private Code-Based Chat App",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
