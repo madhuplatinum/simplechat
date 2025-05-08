@@ -2,41 +2,65 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Simple Chat App</title>
+  <title>Private Code Chat</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
+    #chat { display: none; }
     #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-bottom: 10px; }
-    #input { width: 80%; }
-    #send { width: 18%; }
+    #input, #roomInput { width: 80%; }
+    #send, #joinRoom { width: 18%; }
   </style>
 </head>
 <body>
-  <h1>Simple Chat</h1>
-  <div id="messages"></div>
-  <input id="input" placeholder="Type a message..." />
-  <button id="send">Send</button>
+  <h1>Join Private Chat</h1>
+  <div id="join">
+    <input id="roomInput" placeholder="Enter chat code (e.g. 1234)" />
+    <button id="joinRoom">Join</button>
+  </div>
+
+  <div id="chat">
+    <div id="messages"></div>
+    <input id="input" placeholder="Type a message..." />
+    <button id="send">Send</button>
+  </div>
 
   <script>
-    const socket = new WebSocket(`ws://${window.location.host}`);
+    let socket;
+    let roomCode;
+
+    const joinDiv = document.getElementById('join');
+    const chatDiv = document.getElementById('chat');
     const messagesDiv = document.getElementById('messages');
+    const roomInput = document.getElementById('roomInput');
     const input = document.getElementById('input');
     const sendBtn = document.getElementById('send');
+    const joinBtn = document.getElementById('joinRoom');
 
-    socket.onmessage = (event) => {
-      const msg = document.createElement('div');
-      msg.textContent = event.data;
-      messagesDiv.appendChild(msg);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    joinBtn.onclick = () => {
+      roomCode = roomInput.value.trim();
+      if (roomCode) {
+        socket = new WebSocket(`ws://${window.location.host}`);
+        socket.onopen = () => {
+          socket.send(JSON.stringify({ type: 'join', room: roomCode }));
+          joinDiv.style.display = 'none';
+          chatDiv.style.display = 'block';
+        };
+
+        socket.onmessage = (event) => {
+          const msgData = JSON.parse(event.data);
+          const msg = document.createElement('div');
+          msg.textContent = `${msgData.sender}: ${msgData.text}`;
+          if (msgData.sender === 'Me') msg.style.fontWeight = 'bold';
+          messagesDiv.appendChild(msg);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        };
+      }
     };
 
     sendBtn.onclick = () => {
-      if (input.value) {
-        socket.send(input.value);
-        const msg = document.createElement('div');
-        msg.textContent = 'Me: ' + input.value;
-        msg.style.fontWeight = 'bold';
-        messagesDiv.appendChild(msg);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      const text = input.value.trim();
+      if (text && socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'message', text }));
         input.value = '';
       }
     };
