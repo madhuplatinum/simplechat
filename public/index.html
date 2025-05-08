@@ -1,43 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Simple Chat</title>
+  <meta charset="UTF-8" />
+  <title>Simple Chat App</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-bottom: 10px; }
+    #input { width: 80%; }
+    #send { width: 18%; }
+  </style>
 </head>
 <body>
-  <h1>Simple Messenger</h1>
-  <label>Enter Room Code:</label>
-  <input id="room" />
-  <button onclick="joinRoom()">Join</button>
-
-  <div id="chat" style="display:none;">
-    <div id="messages" style="border:1px solid #000; height:200px; overflow:auto;"></div>
-    <input id="msg" placeholder="Type message" />
-    <button onclick="sendMsg()">Send</button>
-  </div>
+  <h1>Simple Chat</h1>
+  <div id="messages"></div>
+  <input id="input" placeholder="Type a message..." />
+  <button id="send">Send</button>
 
   <script>
-    let socket;
+    const socket = new WebSocket(`ws://${window.location.host}`);
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
 
-    function joinRoom() {
-      const room = document.getElementById("room").value;
-      socket = new WebSocket(`ws://${location.host}`);
-      socket.onopen = () => {
-        socket.send(JSON.stringify({ join: room }));
-        document.getElementById("chat").style.display = "block";
-      };
-      socket.onmessage = (event) => {
-        const messages = document.getElementById("messages");
-        const div = document.createElement("div");
-        div.innerText = event.data;
-        messages.appendChild(div);
-      };
-    }
+    socket.onmessage = (event) => {
+      const msg = document.createElement('div');
+      msg.textContent = event.data;
+      messagesDiv.appendChild(msg);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
 
-    function sendMsg() {
-      const msg = document.getElementById("msg").value;
-      socket.send(JSON.stringify({ text: msg }));
-      document.getElementById("msg").value = '';
-    }
+    sendBtn.onclick = () => {
+      if (input.value) {
+        socket.send(input.value);
+        const msg = document.createElement('div');
+        msg.textContent = 'Me: ' + input.value;
+        msg.style.fontWeight = 'bold';
+        messagesDiv.appendChild(msg);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        input.value = '';
+      }
+    };
   </script>
 </body>
 </html>
