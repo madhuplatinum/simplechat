@@ -1,69 +1,537 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Private Code Chat</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BINGO Game</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #chat { display: none; }
-    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-bottom: 10px; }
-    #input, #roomInput { width: 80%; }
-    #send, #joinRoom { width: 18%; }
+    .box {
+      border: 2px solid #4CAF50;
+      padding: 15px; /* reduced from 30px */
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 128, 0, 0.2);
+      background: linear-gradient(135deg, #e8f5e9, #ffffff);
+      flex-wrap: nowrap; /* prevents wrapping to new line */
+    }
+  
+    input {
+      padding: 6px 10px; /* reduced vertical padding */
+      width: 180px;
+      font-size: 14px;
+      border: 2px solid #2196F3;
+      border-radius: 8px;
+      outline: none;
+      background-color: #f0faff;
+      transition: 0.3s;
+    }
+  
+    input:focus {
+      border-color: #0b7dda;
+      background-color: #e1f5fe;
+    }
+  
+    button {
+      padding: 6px 14px; /* reduced size */
+      font-size: 14px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 0; /* remove extra space */
+    }
+  
+    button:hover {
+      background-color: #388E3C;
+    }
+  
+    #statusMessage {
+      margin: 0 0 0 10px;
+      font-size: 14px;
+      color: #ff5722;
+      font-weight: bold;
+    }
+  
+    #generatedCode {
+      font-size: 14px;
+      color: #333;
+    }
+  
+    #generatedCode b {
+      color: #e91e63;
+    }
+  </style>
+  
+   
+  
+  
+    
+    
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1.bingo-title {
+      font-size: 64px;
+      font-weight: bold;
+      letter-spacing: 15px;
+      color: #ffcc00;
+      text-shadow:
+        0 0 5px #ffcc00,
+        0 0 10px #ff9900,
+        0 0 20px #ff6600,
+        0 0 30px #ff3300;
+      animation: blinkGlow 1.5s infinite alternate;
+      margin: 40px 0 20px;
+    }
+
+    @keyframes blinkGlow {
+      0% {
+        opacity: 1;
+        text-shadow:
+          0 0 5px #ffcc00,
+          0 0 10px #ff9900,
+          0 0 20px #ff6600,
+          0 0 30px #ff3300;
+      }
+      100% {
+        opacity: 0.7;
+        text-shadow:
+          0 0 10px #ffff00,
+          0 0 15px #ffaa00,
+          0 0 25px #ff6600,
+          0 0 35px #ff3300;
+      }
+    }
+
+    .card {
+      background-color: #fff;
+      color: #000;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      padding: 20px;
+      max-width: 600px;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      width: 20%;
+      height: 60px;
+      font-size: 22px;
+      font-weight: bold;
+      border: 3px solid #444;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    th {
+      background-color: #222;
+      color: #ffcc00;
+      cursor: default;
+      font-size: 26px;
+    }
+
+    td:hover {
+      background-color: #e0e0e0;
+      transform: scale(1.05);
+    }
+
+    .green {
+      background-color: #90ee90 !important;
+      color: #000;
+    }
+
+    .red {
+      background-color: #e53935 !important;
+      color: #fff;
+      border-color: gold;
+      box-shadow: 0 0 10px gold;
+    }
+
+    .crossed {
+      text-decoration: line-through;
+      color: rgb(3, 77, 248);
+    }
+
+    #victoryMessage {
+      font-size: 28px;
+      color: #28a745;
+      margin-top: 20px;
+      font-weight: bold;
+      display: none;
+      background: #fff;
+      padding: 15px 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #28a745;
+    }
+
+    /* Style for the BINGO letters */
+    #headerRow th {
+      font-size: 40px;
+      color: #fff;
+      background-color: #333;
+      position: relative;
+      transition: all 0.5s ease-in-out;
+      cursor: pointer;
+      border: 2px solid #222;
+      padding: 10px 0;
+      font-weight: bold;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        text-shadow: 0 0 5px #fff, 0 0 15px #ff9900;
+      }
+      50% {
+        transform: scale(1.1);
+        text-shadow: 0 0 10px #ffcc00, 0 0 20px #ff6600;
+      }
+      100% {
+        transform: scale(1);
+        text-shadow: 0 0 5px #fff, 0 0 15px #ff9900;
+      }
+    }
+
+    #headerRow th:hover {
+      transform: scale(1.2) rotate(-5deg);
+      color: #f4c542;
+      box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+      text-shadow: 0 0 15px #f4c542, 0 0 20px #ff9c00, 0 0 25px #ff6600;
+    }
+
+    .crossed {
+      background-color: transparent !important;
+      color: #ff6600;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 0 0 8px rgba(255, 0, 0, 0.8);
+    }
+
+    #newGameBtn {
+  background: linear-gradient(to right, #ff6a00, #ee0979);
+  border: none;
+  color: white;
+  padding: 14px 32px;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  border-radius: 50px;
+  box-shadow: 0 0 20px rgba(255, 105, 180, 0.8);
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  animation: buttonPulse 1.5s infinite;
+}
+
+#newGameBtn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 1);
+  background: linear-gradient(to right, #ee0979, #ff6a00);
+}
+
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 0 10px #ff6a00, 0 0 20px #ee0979;
+  }
+  50% {
+    box-shadow: 0 0 20px #ff6a00, 0 0 30px #ee0979;
+  }
+  100% {
+    box-shadow: 0 0 10px #ff6a00, 0 0 20px #ee0979;
+  }
+}
+
+#fireworksCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+
   </style>
 </head>
 <body>
-  <h1>Join Private Chat</h1>
-  <div id="join">
-    <input id="roomInput" placeholder="Enter chat code (e.g. 1234)" />
-    <button id="joinRoom">Join</button>
+
+  <h1 class="bingo-title">BINGO</h1>
+  <!--<button id="newGameBtn" onclick="startNewGame()">🎮 New Game</button> -->
+
+
+  <div class="box" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <button onclick="generateCode()">Generate Code</button>
+    <p id="generatedCode">Generated Code: <b>------</b></p>
+    <input type="text" id="enteredCode" placeholder="Enter Game Code">
+    <button onclick="joinGame()">Enter Code</button>
+    <p id="statusMessage" style="margin: 0;"></p>
+  </div>
+  
+
+  <div class="card">
+    <table id="bingoTable">
+      <thead>
+        <tr id="headerRow">
+          <th id="B">B</th>
+          <th id="I">I</th>
+          <th id="N">N</th>
+          <th id="G">G</th>
+          <th id="O">O</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
-  <div id="chat">
-    <div id="messages"></div>
-    <input id="input" placeholder="Type a message..." />
-    <button id="send">Send</button>
-  </div>
+  <div id="victoryMessage">🎉 BINGO! You Win! 🎉</div>
+  <canvas id="fireworksCanvas"></canvas>
+
 
   <script>
-    let socket;
-    let roomCode;
+    const tableBody = document.querySelector("#bingoTable tbody");
+    const headerIds = ["B", "I", "N", "G", "O"];
+    let redLines = 0;
+    let completedLines = new Set();
+    let victoryShown = false;
 
-    const joinDiv = document.getElementById('join');
-    const chatDiv = document.getElementById('chat');
-    const messagesDiv = document.getElementById('messages');
-    const roomInput = document.getElementById('roomInput');
-    const input = document.getElementById('input');
-    const sendBtn = document.getElementById('send');
-    const joinBtn = document.getElementById('joinRoom');
+    const clickSound = new Audio("https://github.com/madhuplatinum/Audio_click_1/raw/main/mixkit-classic-click-1117.wav");
+    const fifthClickSound = new Audio("https://github.com/madhuplatinum/Audio_click_2_5/raw/main/mixkit-video-game-retro-click-237.wav");
+    const victorySound = new Audio("https://github.com/madhuplatinum/Audio_project/raw/main/orchestral-win-331233.mp3");
 
-    joinBtn.onclick = () => {
-      roomCode = roomInput.value.trim();
-      if (roomCode) {
-        socket = new WebSocket(`wss://${window.location.host}`);
-        socket.onopen = () => {
-          socket.send(JSON.stringify({ type: 'join', room: roomCode }));
-          joinDiv.style.display = 'none';
-          chatDiv.style.display = 'block';
-        };
+    // Generate 25 random numbers
+    const numbers = Array.from({ length: 25 }, (_, i) => i + 1)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 25);
 
-        socket.onmessage = (event) => {
-          const msgData = JSON.parse(event.data);
-          const msg = document.createElement('div');
-          msg.textContent = `${msgData.sender}: ${msgData.text}`;
-          if (msgData.sender === 'Me') msg.style.fontWeight = 'bold';
-          messagesDiv.appendChild(msg);
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        };
+    // Create 5x5 bingo grid
+    for (let row = 0; row < 5; row++) {
+      const tr = document.createElement("tr");
+      for (let col = 0; col < 5; col++) {
+        const td = document.createElement("td");
+        td.textContent = numbers[row * 5 + col];
+        td.dataset.row = row;
+        td.dataset.col = col;
+        td.addEventListener("click", handleClick);
+        tr.appendChild(td);
       }
-    };
+      tableBody.appendChild(tr);
+    }
 
-    sendBtn.onclick = () => {
-      const text = input.value.trim();
-      if (text && socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: 'message', text }));
-        input.value = '';
+    function handleClick(e) {
+      const cell = e.target;
+      if (cell.classList.contains("green") || cell.classList.contains("red")) return;
+
+      cell.classList.add("green");
+      clickSound.play();
+      checkMatches();
+    }
+
+    function checkMatches() {
+      const grid = [...tableBody.rows].map(row => [...row.cells]);
+      let newLines = [];
+
+      // Rows
+      for (let r = 0; r < 5; r++) {
+        const row = grid[r];
+        const key = "row" + r;
+        if (!completedLines.has(key) && isMatch(row)) {
+          newLines.push({ key, cells: row });
+        }
       }
-    };
+
+      // Columns
+      for (let c = 0; c < 5; c++) {
+        const col = grid.map(row => row[c]);
+        const key = "col" + c;
+        if (!completedLines.has(key) && isMatch(col)) {
+          newLines.push({ key, cells: col });
+        }
+      }
+
+      // Diagonals
+      const diag1 = grid.map((row, i) => row[i]);
+      const diag2 = grid.map((row, i) => row[4 - i]);
+
+      if (!completedLines.has("diag1") && isMatch(diag1)) {
+        newLines.push({ key: "diag1", cells: diag1 });
+      }
+      if (!completedLines.has("diag2") && isMatch(diag2)) {
+        newLines.push({ key: "diag2", cells: diag2 });
+      }
+
+      // If matches found
+      if (newLines.length > 0) {
+        newLines.forEach(line => {
+          line.cells.forEach(cell => cell.classList.add("red"));
+          completedLines.add(line.key);
+        });
+        fifthClickSound.play();
+      }
+
+      crossBingoLetters(newLines.length);
+    }
+
+    function isMatch(cells) {
+      return cells.every(cell =>
+        cell.classList.contains("green") || cell.classList.contains("red")
+      );
+    }
+
+    function crossBingoLetters(count) {
+      for (let i = 0; i < count; i++) {
+        if (redLines < 5) {
+          const letter = document.getElementById(headerIds[redLines]);
+          if (letter) letter.classList.add("crossed");
+          redLines++;
+        }
+      }
+
+      if (redLines === 5 && !victoryShown) {
+        victoryShown = true;
+        setTimeout(() => {
+          victorySound.play();
+          document.getElementById("victoryMessage").style.display = "block";
+        }, 300);
+      }
+    }
+    function crossBingoLetters(count) {
+  for (let i = 0; i < count; i++) {
+    if (redLines < 5) {
+      const letter = document.getElementById(headerIds[redLines]);
+      if (letter) letter.classList.add("crossed");
+      redLines++;
+    }
+  }
+
+  // 🎉 Victory Condition 🎉
+  if (redLines === 5 && !victoryShown) {
+    victoryShown = true;
+    victorySound.play();
+    document.getElementById("victoryMessage").style.display = "block";
+
+    // Reload the page after a delay
+    setTimeout(() => {
+      location.reload();
+    }, 10000); // 5 seconds delay
+  }
+}
+
+function showVictory() {
+  if (victoryShown) return;
+  victoryShown = true;
+
+  const message = document.getElementById("victoryMessage");
+  message.style.display = "block";
+  victorySound.play();
+
+  // Fireworks initialization
+  const container = document.getElementById("fireworksCanvas");
+  const fireworks = new Fireworks(container, {
+    rocketsPoint: {
+      min: 0,
+      max: 100
+    },
+    hue: {
+      min: 0,
+      max: 360
+    },
+    delay: {
+      min: 15,
+      max: 30
+    },
+    speed: 3,
+    acceleration: 1.05,
+    friction: 0.95,
+    gravity: 1.5,
+    particles: 150,
+    trace: 3,
+    explosion: 6,
+    autoresize: true,
+    brightness: {
+      min: 50,
+      max: 80
+    },
+    decay: {
+      min: 0.015,
+      max: 0.03
+    },
+    boundaries: {
+      top: 50,
+      bottom: container.clientHeight,
+      left: 50,
+      right: container.clientWidth
+    },
+    sound: {
+      enable: true,
+      list: [
+        "https://fireworks.js.org/sounds/explosion0.mp3",
+        "https://fireworks.js.org/sounds/explosion1.mp3",
+        "https://fireworks.js.org/sounds/explosion2.mp3"
+      ],
+      min: 4,
+      max: 8
+    }
+  });
+
+  fireworks.start();
+
+  // Optional: stop fireworks after 8 seconds
+  setTimeout(() => fireworks.stop(), 8000);
+}
+
+
+
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.9.4/dist/fireworks.js"></script>
+
+
+
+  <script>
+    let gameCode = "";
+    
+    function generateCode() {
+      gameCode = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById("generatedCode").innerHTML = "Generated Code: <b>" + gameCode + "</b>";
+      document.getElementById("statusMessage").innerText = "Share this code with Player 2.";
+      document.getElementById("statusMessage").style.color = "green";
+    }
+    
+    function joinGame() {
+      const entered = document.getElementById("enteredCode").value.trim();
+      if (entered === gameCode) {
+        document.getElementById("statusMessage").innerText = "✅ Code matched! Game can start!";
+        document.getElementById("statusMessage").style.color = "green";
+      } else {
+        document.getElementById("statusMessage").innerText = "❌ Code does not match. Try again.";
+        document.getElementById("statusMessage").style.color = "red";
+      }
+    }
+    </script>
+    
+
+
 </body>
 </html>
