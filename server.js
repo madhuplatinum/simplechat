@@ -7,28 +7,50 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// Serve static files from 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// WebSocket connection handling
+// Store rooms and connections
+const rooms = {};  // { roomCode: Set of clients }
+
 wss.on('connection', (ws) => {
-  console.log('New client connected');
+  let currentRoom = null;
 
   ws.on('message', (message) => {
-    // Broadcast message to all clients
-    wss.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message.toString());
+    const parsed = JSON.parse(message);
+
+    // Join Room
+    if (parsed.type === 'join') {
+      currentRoom = parsed.room;
+      if (!rooms[currentRoom]) {
+        rooms[currentRoom] = new Set();
       }
-    });
+      rooms[currentRoom].add(ws);
+    }
+
+    // Broadcast message
+    if (parsed.type === 'message' && currentRoom && rooms[currentRoom]) {
+      rooms[currentRoom].forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          const isSender = client === ws;
+          client.send(JSON.stringify({
+            sender: isSender ? "Me" : "Other",
+            text: parsed.text
+          }));
+        }
+      });
+    }
   });
 
   ws.on('close', () => {
-    console.log('Client disconnected');
+    if (currentRoom && rooms[currentRoom]) {
+      rooms[currentRoom].delete(ws);
+      if (rooms[currentRoom].size === 0) {
+        delete rooms[currentRoom];
+      }
+    }
   });
 });
 
-// Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
