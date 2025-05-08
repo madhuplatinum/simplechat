@@ -1,54 +1,28 @@
-const WebSocket = require('ws');
+const express = require('express');
 const http = require('http');
-const fs = require('fs');
+const WebSocket = require('ws');
 const path = require('path');
 
-const server = http.createServer((req, res) => {
-  let filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
-  let contentType = 'text/html';
-
-  if (filePath.endsWith('.js')) contentType = 'text/javascript';
-  else if (filePath.endsWith('.css')) contentType = 'text/css';
-
-  fs.readFile(filePath, (err, content) => {
-    if (err) {
-      res.writeHead(404);
-      res.end('Not found');
-    } else {
-      res.writeHead(200, { 'Content-Type': contentType });
-      res.end(content);
-    }
-  });
-});
-
+const app = express();
+const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-let rooms = {};
 
-wss.on('connection', (ws) => {
-  let room = null;
+// Serve HTML
+app.use(express.static(path.join(__dirname, 'public')));
 
-  ws.on('message', (message) => {
-    const data = JSON.parse(message);
-    if (data.join) {
-      room = data.join;
-      rooms[room] = rooms[room] || [];
-      rooms[room].push(ws);
-    } else if (data.text && room && rooms[room]) {
-      rooms[room].forEach(client => {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(data.text);
-        }
-      });
-    }
-  });
-
-  ws.on('close', () => {
-    if (room && rooms[room]) {
-      rooms[room] = rooms[room].filter(client => client !== ws);
-    }
+// WebSocket chat logic
+wss.on('connection', function connection(ws) {
+  ws.on('message', function incoming(message) {
+    // Broadcast to all clients
+    wss.clients.forEach(function each(client) {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(message.toString());
+      }
+    });
   });
 });
 
-server.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
