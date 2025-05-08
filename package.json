@@ -1,13 +1,14 @@
 {
-  "name": "simplemessenger",
+  "name": "bingo-game",
   "version": "1.0.0",
-  "description": "Private Code-Based Chat App",
+  "description": "A simple Bingo game with HTML frontend and Node.js server.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "ws": "^8.13.0"
-  }
+    "express": "^4.18.2"
+  },
+  "author": "Madhu",
+  "license": "MIT"
 }
