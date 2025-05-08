@@ -510,26 +510,39 @@ function showVictory() {
 
 
   <script>
-    let gameCode = "";
-    
-    function generateCode() {
-      gameCode = Math.floor(100000 + Math.random() * 900000).toString();
+let gameCode = "";
+
+function generateCode() {
+  fetch('/api/generate')
+    .then(res => res.json())
+    .then(data => {
+      gameCode = data.code;
       document.getElementById("generatedCode").innerHTML = "Generated Code: <b>" + gameCode + "</b>";
       document.getElementById("statusMessage").innerText = "Share this code with Player 2.";
       document.getElementById("statusMessage").style.color = "green";
-    }
-    
-    function joinGame() {
-      const entered = document.getElementById("enteredCode").value.trim();
-      if (entered === gameCode) {
+    });
+}
+
+function joinGame() {
+  const entered = document.getElementById("enteredCode").value.trim();
+  fetch('/api/join', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: entered })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
         document.getElementById("statusMessage").innerText = "✅ Code matched! Game can start!";
         document.getElementById("statusMessage").style.color = "green";
       } else {
         document.getElementById("statusMessage").innerText = "❌ Code does not match. Try again.";
         document.getElementById("statusMessage").style.color = "red";
       }
-    }
-    </script>
+    });
+}
+</script>
+
     
 
 
